@@ -1,0 +1,16 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PedaniaViewSet, PerfilViewSet, AnuncioViewSet, InscripcionViewSet, ComentarioViewSet
+
+# ¿Qué hace urls.py? -> Define las rutas a la cual React llamará para obtener información.
+
+router = DefaultRouter()
+router.register(r'pedanias', PedaniaViewSet)
+router.register(r'perfil', PerfilViewSet)
+router.register(r'anuncio', AnuncioViewSet)
+router.register(r'inscripcion', InscripcionViewSet)
+router.register(r'comentario', ComentarioViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
