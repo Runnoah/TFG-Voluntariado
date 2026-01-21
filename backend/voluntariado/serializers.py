@@ -4,11 +4,13 @@ from .models import Pedania, Perfil, Anuncio, Inscripcion, Comentario
 from django.contrib.auth.models import User
 
 # ¿Qué hace? -> Convierte tus datos de la base de datos (Que tenemos en python) a formato JSON para que React los pueda leer.
+# Lo que hacemos es ver que modelo cogemos, hacemos una clase "Serializer" para cada modelo y cogemos los campos que queremos mandar.
+# Por ejemplo en usuario NO cogemos contraseñas porque no nos interesa mandarlas.
 
 class PedaniaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pedania
-        fields = '__all__' # Esto enviará el ID y el Nombre a React
+        fields = '__all__' 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

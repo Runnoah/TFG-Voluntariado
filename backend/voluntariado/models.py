@@ -23,6 +23,7 @@ class Perfil(models.Model):
 
 class Pedania(models.Model):
 
+    # La famosa tabla paises version mazarron
     nombre = models.CharField(max_length=100)
     
     def __str__(self):
@@ -68,6 +69,7 @@ class Inscripcion(models.Model):
     
 class Comentario(models.Model):
 
+    # Comentarios que se podrán poner en los anuncios
     anuncio = models.ForeignKey(Anuncio, on_delete=models.CASCADE, related_name='comentarios')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comentarios_realizados')
     contenido = models.TextField()
