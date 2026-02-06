@@ -6,11 +6,12 @@ from .views import PedaniaViewSet, PerfilViewSet, AnuncioViewSet, InscripcionVie
 # La r antes de las comillas -> es para que le diga a Python que no interprete las \ como caracteres de escape con \n o \t 
 router = DefaultRouter()
 router.register(r'pedanias', PedaniaViewSet)
-router.register(r'perfil', PerfilViewSet)
-router.register(r'anuncio', AnuncioViewSet)
-router.register(r'inscripcion', InscripcionViewSet)
-router.register(r'comentario', ComentarioViewSet)
+router.register(r'comentarios', ComentarioViewSet)
+
+router.register(r'anuncios', AnuncioViewSet, basename='anuncio')
+router.register(r'inscripciones', InscripcionViewSet, basename='inscripcion')
+router.register(r'perfiles', PerfilViewSet, basename='perfil')
 
 urlpatterns = [
     path('', include(router.urls)),
-]
+]       
