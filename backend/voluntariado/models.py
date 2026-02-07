@@ -5,7 +5,7 @@ class Perfil(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
 
-    ROLES = [
+    ROLES = [       
         ('voluntario', 'Voluntario'),
         ('organizacion', 'Organizacion / Entidad'),
         ('Administrador', 'Administrador de la plataforma'),
