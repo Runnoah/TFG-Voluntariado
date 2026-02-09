@@ -1,0 +1,101 @@
+import random
+from datetime import datetime, timedelta
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from django.contrib.auth.models import User
+from voluntariado.models import Pedania, Anuncio, Perfil
+from faker import Faker
+
+class Command(BaseCommand):
+    help = 'Populate the database with dummy data'
+
+    def handle(self, *args, **kwargs):
+        fake = Faker('es_ES')
+
+        # 1. Create Pedanias if they don't exist
+        pedanias_names = [
+            "Mazarrón", "Puerto de Mazarrón", "Bolnuevo", "Cañada de Gallego", 
+            "Pastrana", "Saladillo", "Ifre-Cañada de Gallego", "Leiva", 
+            "La Majada", "Gañuelas", "Garrobo", "Balsicas", "Atalaya"
+        ]
+        
+        pedanias = []
+        for name in pedanias_names:
+            pedania, created = Pedania.objects.get_or_create(nombre=name)
+            pedanias.append(pedania)
+        
+        self.stdout.write(self.style.SUCCESS(f'Checked/Created {len(pedanias)} Pedanías.'))
+
+        # 2. Create some users to be authors
+        users = []
+        for _ in range(5):
+            username = fake.user_name()
+            # Ensure unique username
+            while User.objects.filter(username=username).exists():
+                username = fake.user_name() + str(random.randint(1, 999))
+                
+            user = User.objects.create_user(
+                username=username,
+                email=fake.email(),
+                password='password123',
+                first_name=fake.first_name(),
+                last_name=fake.last_name()
+            )
+            # Create Profile for user
+            Perfil.objects.create(
+                user=user,
+                rol=random.choice(['voluntario', 'organizacion']),
+                telefono=fake.phone_number()[:15],
+                fecha_nacimiento=fake.date_of_birth(minimum_age=18, maximum_age=80),
+                nombre_entidad=fake.company() if random.choice([True, False]) else None
+            )
+            users.append(user)
+        
+        # Ensure we have users
+        if not users and User.objects.exists():
+            users = list(User.objects.all())
+
+        self.stdout.write(self.style.SUCCESS(f'Created/Loaded {len(users)} Users.'))
+
+        # 3. Create at least 1 FUTURE Activity per Pedania
+        for pedania in pedanias:
+            Anuncio.objects.create(
+                titulo=fake.sentence(nb_words=6),
+                descripcion=fake.paragraph(nb_sentences=5),
+                fecha_evento=timezone.now() + timedelta(days=random.randint(1, 60)),
+                etiqueta=random.choice(['medio_ambiente', 'educacion', 'salud', 'comunidad', 'animales']),
+                estado='publicado',
+                cupo_maximo=random.randint(5, 50),
+                pedanias=pedania, # Assign specific pedania
+                usuario=random.choice(users),
+            )
+        
+        # Add a few more random ones
+        for _ in range(5):
+             Anuncio.objects.create(
+                titulo=fake.sentence(nb_words=6),
+                descripcion=fake.paragraph(nb_sentences=5),
+                fecha_evento=timezone.now() + timedelta(days=random.randint(1, 60)),
+                etiqueta=random.choice(['medio_ambiente', 'educacion', 'salud', 'comunidad', 'animales']),
+                estado='publicado',
+                cupo_maximo=random.randint(5, 50),
+                pedanias=random.choice(pedanias),
+                usuario=random.choice(users),
+            )
+
+        self.stdout.write(self.style.SUCCESS(f'Created {len(pedanias) + 5} Future Activities (1 per Pedania + 5 random).'))
+
+        # 4. Create 5 PAST Activities (News)
+        for _ in range(5):
+             Anuncio.objects.create(
+                titulo=fake.sentence(nb_words=6),
+                descripcion=fake.paragraph(nb_sentences=5),
+                fecha_evento=timezone.now() - timedelta(days=random.randint(1, 60)), # Past date
+                etiqueta=random.choice(['medio_ambiente', 'educacion', 'salud', 'comunidad']),
+                estado='finalizado', # Marked as finished
+                cupo_maximo=random.randint(5, 50),
+                pedanias=random.choice(pedanias),
+                usuario=random.choice(users),
+            )
+
+        self.stdout.write(self.style.SUCCESS('Created 5 Past Activities (News).'))
