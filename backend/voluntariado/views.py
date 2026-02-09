@@ -90,7 +90,7 @@ class CurrentUserView(APIView):
     def get(self, request):
         # Asegurar que existe el perfil (por si acaso son usuarios antiguos)
         perfil, created = Perfil.objects.get_or_create(user=request.user)
-        serializer = PerfilSerializer(perfil)
+        serializer = PerfilSerializer(perfil, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request):
@@ -106,7 +106,7 @@ class CurrentUserView(APIView):
 
         # 2. Actualizar datos del Perfil
         # Usamos el serializer para validar y guardar (partial=True permite enviar solo algunos campos)
-        serializer = PerfilSerializer(perfil, data=data, partial=True)
+        serializer = PerfilSerializer(perfil, data=data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             # Retornamos los datos actualizados
