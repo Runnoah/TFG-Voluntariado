@@ -195,14 +195,14 @@ export default function Profile() {
                             <div key={inscription.id} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex justify-between items-center group hover:shadow-lg transition-shadow">
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-800 mb-2">
-                                        Actividad #{inscription.anuncio}
+                                        {inscription.titulo_anuncio || `Actividad #${inscription.anuncio}`}
                                     </h3>
                                     <p className="text-gray-500 text-sm flex items-center gap-2">
                                         <Calendar className="h-4 w-4" /> Fecha: {new Date(inscription.fecha_inscripcion).toLocaleDateString()}
                                     </p>
                                 </div>
                                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${inscription.estado === 'confirmada' ? 'bg-green-100 text-green-700' :
-                                        inscription.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                    inscription.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                                     }`}>
                                     {inscription.estado || 'Inscrito'}
                                 </span>
