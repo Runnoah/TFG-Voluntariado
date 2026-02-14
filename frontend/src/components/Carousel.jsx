@@ -15,8 +15,12 @@ export default function Carousel() {
             try {
                 const response = await axiosInstance.get('anuncios/');
                 // Filtrar solo actividades futuras/publicadas para el carrusel
-                const activeSlides = response.data.filter(item => item.estado === 'publicado');
-                // Si no hay, usar placeholders
+                let activeSlides = response.data.filter(item => item.estado === 'publicado');
+                
+                // Limitar a máximo 5 slides
+                activeSlides = activeSlides.slice(0, 5);
+
+                // Si no hay, usar placeholders significativos
                 if (activeSlides.length > 0) {
                     setSlides(activeSlides);
                 } else {
@@ -26,6 +30,30 @@ export default function Carousel() {
                             imagen: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
                             titulo: 'Ayuda a tu Comunidad',
                             descripcion: 'Únete a miles de voluntarios haciendo del mundo un lugar mejor.'
+                        },
+                        {
+                            id: 2,
+                            imagen: 'https://images.unsplash.com/photo-1542601906990-b4d3fb7d5b43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                            titulo: 'Cuidado del Medio Ambiente',
+                            descripcion: 'Participa en actividades de reforestación y limpieza de playas.'
+                        },
+                        {
+                            id: 3,
+                            imagen: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                            titulo: 'Apoyo Educativo',
+                            descripcion: 'Comparte tus conocimientos y ayuda a niños y jóvenes a alcanzar su potencial.'
+                        },
+                        {
+                            id: 4,
+                            imagen: 'https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                            titulo: 'Asistencia Sanitaria',
+                            descripcion: 'Colabora en campañas de salud y bienestar para comunidades vulnerables.'
+                        },
+                        {
+                            id: 5,
+                            imagen: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                            titulo: 'Bienestar Animal',
+                            descripcion: 'Ayuda en refugios y promueve la adopción responsable de mascotas.'
                         }
                     ]);
                 }
@@ -38,6 +66,30 @@ export default function Carousel() {
                         imagen: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
                         titulo: 'Ayuda a tu Comunidad',
                         descripcion: 'Únete a miles de voluntarios haciendo del mundo un lugar mejor.'
+                    },
+                    {
+                        id: 2,
+                        imagen: 'https://images.unsplash.com/photo-1542601906990-b4d3fb7d5b43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                        titulo: 'Cuidado del Medio Ambiente',
+                        descripcion: 'Participa en actividades de reforestación y limpieza de playas.'
+                    },
+                    {
+                        id: 3,
+                        imagen: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                        titulo: 'Apoyo Educativo',
+                        descripcion: 'Comparte tus conocimientos y ayuda a niños y jóvenes a alcanzar su potencial.'
+                    },
+                    {
+                        id: 4,
+                        imagen: 'https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                        titulo: 'Asistencia Sanitaria',
+                        descripcion: 'Colabora en campañas de salud y bienestar para comunidades vulnerables.'
+                    },
+                    {
+                        id: 5,
+                        imagen: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+                        titulo: 'Bienestar Animal',
+                        descripcion: 'Ayuda en refugios y promueve la adopción responsable de mascotas.'
                     }
                 ]);
             } finally {
