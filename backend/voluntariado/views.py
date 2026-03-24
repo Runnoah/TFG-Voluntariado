@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from .models import Pedania, Anuncio, Inscripcion, Comentario, Perfil
 from .serializers import PedaniaSerializer, AnuncioSerializer, InscripcionSerializer, ComentarioSerializer, PerfilSerializer, UserSerializer
+from .permissions import IsOrganizacionOrAdmin, IsOwnerOrAdmin
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,11 +15,11 @@ class PedaniaViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-# R-> Cualquiera ve anuncios pero solo las organizaciones/admin crean
+# R-> Cualquiera ve anuncios pero solo las organizaciones/admin crean y editan sus propios anuncios
 class AnuncioViewSet(viewsets.ModelViewSet):
     queryset = Anuncio.objects.all()
     serializer_class = AnuncioSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOrganizacionOrAdmin, IsOwnerOrAdmin]
 
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
@@ -111,4 +112,33 @@ class CurrentUserView(APIView):
             serializer.save()
             # Retornamos los datos actualizados
             return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CrearOrganizacionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        # Doble check para asegurarse que es admin
+        is_admin = bool(request.user and request.user.is_authenticated and 
+                        (request.user.is_staff or getattr(getattr(request.user, 'perfil', None), 'rol', '').lower() == 'administrador'))
+        if not is_admin:
+            return Response({'error': 'No tienes permisos para crear una organización'}, status=status.HTTP_403_FORBIDDEN)
+            
+        data = request.data
+        serializer = UserSerializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
+            if 'password' in data:
+                user.set_password(data['password'])
+            else:
+                user.set_password('voluntariado2024') # Contraseña por defecto
+            user.save()
+            
+            # Crear perfil automáticamente
+            Perfil.objects.create(
+                user=user, 
+                rol='organizacion',
+                nombre_entidad=data.get('nombre_entidad', '')
+            )
+            return Response({'mensaje': 'Organización creada exitosamente', 'user': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

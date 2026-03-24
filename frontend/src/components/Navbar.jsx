@@ -59,6 +59,13 @@ export default function Navbar() {
                                         Mi Perfil
                                     </Button>
                                 </Link>
+                                {user.rol && user.rol.toLowerCase() === 'administrador' && (
+                                    <Link to="/crear-organizacion">
+                                        <Button variant="outline" size="sm" className="text-brand-600 border-brand-600 hover:bg-brand-50">
+                                            Añadir Org.
+                                        </Button>
+                                    </Link>
+                                )}
                                 <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center text-red-500 hover:text-red-600 hover:bg-red-50">
                                     <LogOut className="h-4 w-4 mr-2" />
                                     Salir
@@ -110,8 +117,13 @@ export default function Navbar() {
                     <div className="pt-4 pb-4 border-t border-gray-100">
                         {token ? (
                             <div className="flex items-center px-4">
-                                <div className="ml-3 w-full">
+                                <div className="ml-3 w-full space-y-2">
                                     <div className="text-base font-medium text-gray-800 mb-2">Usuario</div>
+                                    {user && user.rol && user.rol.toLowerCase() === 'administrador' && (
+                                        <Link to="/crear-organizacion" onClick={() => setIsOpen(false)}>
+                                            <Button variant="outline" className="w-full justify-center mb-2">Añadir Org.</Button>
+                                        </Link>
+                                    )}
                                     <Button variant="danger" onClick={handleLogout} className="w-full justify-center">
                                         Cerrar Sesión
                                     </Button>

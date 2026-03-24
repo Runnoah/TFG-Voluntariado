@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import News from './pages/News';
 import ActivityDetail from './pages/ActivityDetail';
 import Profile from './pages/Profile';
+import CrearOrganizacion from './pages/CrearOrganizacion';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/noticias" element={<News />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/crear-organizacion" element={<CrearOrganizacion />} />
         </Routes>
       </Router>
     </AuthProvider>
