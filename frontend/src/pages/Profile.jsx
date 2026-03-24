@@ -12,6 +12,18 @@ export default function Profile() {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
 
+    // Activity Management State
+    const [myActivities, setMyActivities] = useState([]);
+    const [pedanias, setPedanias] = useState([]);
+    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [editingActivity, setEditingActivity] = useState(null);
+    const [activityForm, setActivityForm] = useState({
+        titulo: '', descripcion: '', fecha_evento: '', etiqueta: 'otros', estado: 'borrador', cupo_maximo: 0, pedanias: ''
+    });
+    const [activityImage, setActivityImage] = useState(null);
+    const [activityToDelete, setActivityToDelete] = useState(null);
+
+
     // Form State
     const [formData, setFormData] = useState({});
     const [previewImage, setPreviewImage] = useState(null);
@@ -23,15 +35,28 @@ export default function Profile() {
                 try {
                     const response = await axiosInstance.get('inscripciones/');
                     setInscriptions(response.data);
+                    
+                    if (user && user.rol === 'organizacion') {
+                        const [anunciosRes, pedaniasRes] = await Promise.all([
+                            axiosInstance.get('anuncios/'),
+                            axiosInstance.get('pedanias/')
+                        ]);
+                        // Filter by the user's id. Assuming `usuario` in anuncio refers to user.id
+                        const myActs = anunciosRes.data.filter(a => a.usuario === user.id);
+                        setMyActivities(myActs);
+                        setPedanias(pedaniasRes.data);
+                    }
                 } catch (error) {
-                    console.error("Error al cargar inscripciones", error);
+                    console.error("Error al cargar datos", error);
                 } finally {
                     setLoading(false);
                 }
             }
         };
-        fetchInscriptions();
-    }, [token]);
+        if (user) {
+            fetchInscriptions();
+        }
+    }, [token, user]);
 
     // Initialize form data when user loads or edit starts
     useEffect(() => {
@@ -82,6 +107,80 @@ export default function Profile() {
         } finally {
             setSaveLoading(false);
             setIsEditing(false);
+        }
+    };
+
+    const handleActivityInputChange = (e) => {
+        setActivityForm({ ...activityForm, [e.target.name]: e.target.value });
+    };
+
+    const handleActivityImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) setActivityImage(file);
+    };
+
+    const openCreateActivityModal = () => {
+        setEditingActivity(null);
+        setActivityForm({ titulo: '', descripcion: '', fecha_evento: '', etiqueta: 'otros', estado: 'borrador', cupo_maximo: 0, pedanias: pedanias[0]?.id || '' });
+        setActivityImage(null);
+        setIsActivityModalOpen(true);
+    };
+
+    const openEditActivityModal = (activity) => {
+        setEditingActivity(activity);
+        // Format date to YYYY-MM-DDTHH:MM for input datetime-local
+        let formattedDate = '';
+        if (activity.fecha_evento) {
+            const dateObj = new Date(activity.fecha_evento);
+            formattedDate = dateObj.toISOString().slice(0, 16);
+        }
+        setActivityForm({
+            titulo: activity.titulo,
+            descripcion: activity.descripcion,
+            fecha_evento: formattedDate,
+            etiqueta: activity.etiqueta,
+            estado: activity.estado,
+            cupo_maximo: activity.cupo_maximo,
+            pedanias: activity.pedanias
+        });
+        setActivityImage(null);
+        setIsActivityModalOpen(true);
+    };
+
+    const handleSaveActivity = async (e) => {
+        e.preventDefault();
+        const data = new FormData();
+        Object.keys(activityForm).forEach(key => data.append(key, activityForm[key]));
+        if (activityImage) data.append('imagen', activityImage);
+
+        try {
+            if (editingActivity) {
+                await axiosInstance.put(`anuncios/${editingActivity.id}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+            } else {
+                await axiosInstance.post('anuncios/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+            }
+            setIsActivityModalOpen(false);
+            window.location.reload();
+        } catch (error) {
+            console.error("Error saving activity", error);
+            alert("Error al guardar la actividad.");
+        }
+    };
+
+    const handleDeleteActivity = (activity) => {
+        setActivityToDelete(activity);
+    };
+
+    const confirmDeleteActivity = async () => {
+        if (!activityToDelete) return;
+        try {
+            await axiosInstance.delete(`anuncios/${activityToDelete.id}/`);
+            setMyActivities(myActivities.filter(a => a.id !== activityToDelete.id));
+            setActivityToDelete(null);
+        } catch (error) {
+            console.error("Error deleting activity", error);
+            alert("Error al eliminar la actividad.");
+            setActivityToDelete(null);
         }
     };
 
@@ -215,6 +314,138 @@ export default function Profile() {
                         <Button variant="gradient" onClick={() => window.location.href = '/actividades'}>
                             Explorar Actividades
                         </Button>
+                    </div>
+                )}
+
+                {/* Organization Activities Management section */}
+                {user.rol === 'organizacion' && (
+                    <div className="mt-12">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">Mis Actividades Creadas</h2>
+                            <Button className="bg-brand-600 hover:bg-brand-700" onClick={openCreateActivityModal}>
+                                + Crear Actividad
+                            </Button>
+                        </div>
+
+                        {myActivities.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {myActivities.map(activity => (
+                                    <div key={activity.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 flex flex-col">
+                                        <div className="h-40 overflow-hidden relative">
+                                            <img src={activity.imagen || "https://via.placeholder.com/400x200?text=No+Image"} alt={activity.titulo} className="w-full h-full object-cover" />
+                                            <div className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded-full text-white ${activity.estado === 'publicado' ? 'bg-green-500' : 'bg-yellow-500'}`}>
+                                                {activity.estado}
+                                            </div>
+                                        </div>
+                                        <div className="p-4 flex-grow flex flex-col">
+                                            <h3 className="font-bold text-lg mb-2">{activity.titulo}</h3>
+                                            <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow">{activity.descripcion}</p>
+                                            <div className="flex gap-2 mt-auto">
+                                                <Button variant="outline" className="flex-1 py-1" onClick={() => openEditActivityModal(activity)}>Editar</Button>
+                                                <Button variant="outline" className="flex-1 py-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteActivity(activity)}>Borrar</Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <p className="text-gray-500">No has creado ninguna actividad aún.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Activity Modal */}
+                {isActivityModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                                <h3 className="text-xl font-bold">{editingActivity ? 'Editar Actividad' : 'Crear Actividad'}</h3>
+                                <button onClick={() => setIsActivityModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+                            <form onSubmit={handleSaveActivity} className="p-6 space-y-4">
+                                <Input label="Título" name="titulo" value={activityForm.titulo} onChange={handleActivityInputChange} required />
+                                
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-700">Descripción</label>
+                                    <textarea name="descripcion" value={activityForm.descripcion} onChange={handleActivityInputChange} className="w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-500 focus:border-brand-500" rows="3" required></textarea>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Fecha del Evento" name="fecha_evento" type="datetime-local" value={activityForm.fecha_evento} onChange={handleActivityInputChange} required />
+                                    <Input label="Cupo Máximo" name="cupo_maximo" type="number" min="0" value={activityForm.cupo_maximo} onChange={handleActivityInputChange} required />
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-sm font-medium text-gray-700">Estado</label>
+                                        <select name="estado" value={activityForm.estado} onChange={handleActivityInputChange} className="w-full border-gray-300 rounded-md shadow-sm">
+                                            <option value="borrador">Borrador</option>
+                                            <option value="publicado">Publicado</option>
+                                            <option value="finalizado">Finalizado</option>
+                                            <option value="cancelado">Cancelado</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-sm font-medium text-gray-700">Etiqueta</label>
+                                        <select name="etiqueta" value={activityForm.etiqueta} onChange={handleActivityInputChange} className="w-full border-gray-300 rounded-md shadow-sm">
+                                            <option value="medio_ambiente">Medio Ambiente</option>
+                                            <option value="educacion">Educación</option>
+                                            <option value="salud">Salud</option>
+                                            <option value="comunidad">Comunidad</option>
+                                            <option value="animales">Animales</option>
+                                            <option value="otros">Otros</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-sm font-medium text-gray-700">Pedanía</label>
+                                        <select name="pedanias" value={activityForm.pedanias} onChange={handleActivityInputChange} className="w-full border-gray-300 rounded-md shadow-sm" required>
+                                            <option value="">Selecciona...</option>
+                                            {pedanias.map(p => (
+                                                <option key={p.id} value={p.id}>{p.nombre}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-gray-700">Imagen</label>
+                                    <input type="file" accept="image/*" onChange={handleActivityImageChange} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100" />
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <Button type="button" variant="outline" className="flex-1" onClick={() => setIsActivityModalOpen(false)}>Cancelar</Button>
+                                    <Button type="submit" className="flex-1">Guardar</Button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {activityToDelete && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
+                            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                                <X className="h-8 w-8 text-red-600" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">¿Eliminar actividad?</h3>
+                            <p className="text-gray-500 mb-8">
+                                Estás a punto de borrar definitivamente la actividad <strong>"{activityToDelete.titulo}"</strong>. 
+                                Esta acción no se puede deshacer y eliminará las inscripciones vinculadas. ¿Estás seguro?
+                            </p>
+                            <div className="flex gap-4">
+                                <Button variant="outline" className="flex-1" onClick={() => setActivityToDelete(null)}>
+                                    Cancelar
+                                </Button>
+                                <Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={confirmDeleteActivity}>
+                                    Sí, eliminar
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
