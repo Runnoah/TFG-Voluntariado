@@ -12,7 +12,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Activity Management State
+    // Variables de estado para gestionar las actividades de la organización
     const [myActivities, setMyActivities] = useState([]);
     const [pedanias, setPedanias] = useState([]);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function Profile() {
     const [activityToDelete, setActivityToDelete] = useState(null);
 
 
-    // Form State
+    // Variables de estado para el formulario de edición del perfil
     const [formData, setFormData] = useState({});
     const [previewImage, setPreviewImage] = useState(null);
     const [saveLoading, setSaveLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function Profile() {
                             axiosInstance.get('anuncios/'),
                             axiosInstance.get('pedanias/')
                         ]);
-                        // Filter by the user's id. Assuming `usuario` in anuncio refers to user.id
+                        // Filtramos las actividades para mostrar solo las que ha creado esta organización (comparando el ID del usuario)
                         const myActs = anunciosRes.data.filter(a => a.usuario === user.id);
                         setMyActivities(myActs);
                         setPedanias(pedaniasRes.data);
@@ -58,7 +58,7 @@ export default function Profile() {
         }
     }, [token, user]);
 
-    // Initialize form data when user loads or edit starts
+    // Inicializamos el formulario con los datos del usuario en cuanto cargue o cuando empiece a editar
     useEffect(() => {
         if (user) {
             setFormData({
@@ -68,7 +68,7 @@ export default function Profile() {
                 telefono: user.telefono || '',
                 fecha_nacimiento: user.fecha_nacimiento || '',
                 nombre_entidad: user.nombre_entidad || '',
-                // Foto is handled separately due to file input
+                // La foto de perfil se gestiona por separado al ser un archivo
             });
         }
     }, [user, isEditing]);
@@ -128,7 +128,7 @@ export default function Profile() {
 
     const openEditActivityModal = (activity) => {
         setEditingActivity(activity);
-        // Format date to YYYY-MM-DDTHH:MM for input datetime-local
+        // Formateamos la fecha al estilo YYYY-MM-DDTHH:MM para que el input de tipo datetime-local la pueda leer
         let formattedDate = '';
         if (activity.fecha_evento) {
             const dateObj = new Date(activity.fecha_evento);
@@ -189,7 +189,7 @@ export default function Profile() {
     return (
         <Layout>
             <div className="max-w-4xl mx-auto px-4 py-12">
-                {/* Profile Header */}
+                {/* Cabecera principal del perfil del usuario */}
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 relative group">
                     <div className="bg-gradient-to-r from-brand-600 to-accent-600 h-32"></div>
                     <div className="px-8 pb-8">
@@ -234,7 +234,7 @@ export default function Profile() {
                     </div>
                 </div>
 
-                {/* Edit Modal */}
+                {/* Modal emergente para editar los datos personales del Perfil */}
                 {isEditing && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -317,7 +317,7 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* Organization Activities Management section */}
+                {/* Sección Exclusiva: Gestión de Actividades Creadas (Solo Organizaciones) */}
                 {user.rol === 'organizacion' && (
                     <div className="mt-12">
                         <div className="flex justify-between items-center mb-6">
@@ -356,7 +356,7 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* Activity Modal */}
+                {/* Modal emergente para Crear o Editar una Actividad */}
                 {isActivityModalOpen && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -425,7 +425,7 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* Delete Confirmation Modal */}
+                {/* Modal de Advertencia para la Eliminación de una Actividad */}
                 {activityToDelete && (
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
