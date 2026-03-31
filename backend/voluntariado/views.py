@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
+from .utils import send_welcome_email, send_inscription_email
 
 # R-> viewsets -> Nos crea automaticamente el get / post / get id / put / delete 
 # R-> IsAuthenticatedOrReadOnly -> Si vienes con Get | Pasa -> Si vienes con Post | No, registrate
@@ -37,9 +38,10 @@ class InscripcionViewSet(viewsets.ModelViewSet):
             return Inscripcion.objects.all()
         return Inscripcion.objects.filter(usuario=user)
 
-
     def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user)
+        inscripcion = serializer.save(usuario=self.request.user)
+        if inscripcion.usuario.email:
+            send_inscription_email(inscripcion.usuario.email, inscripcion.usuario.username, inscripcion.anuncio)
 
 class ComentarioViewSet(viewsets.ModelViewSet):
     serializer_class = ComentarioSerializer
@@ -78,9 +80,11 @@ class RegisterView(APIView):
             user.save()
             # Crear perfil automáticamente
             Perfil.objects.create(user=user, rol='Voluntario') 
-            
             # Generar token real
             token, created = Token.objects.get_or_create(user=user)
+            
+            if user.email:
+                send_welcome_email(user.email, user.username, is_organization=False)
             
             return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -140,5 +144,9 @@ class CrearOrganizacionView(APIView):
                 rol='organizacion',
                 nombre_entidad=data.get('nombre_entidad', '')
             )
+            
+            if user.email:
+                send_welcome_email(user.email, user.username, is_organization=True)
+                
             return Response({'mensaje': 'Organización creada exitosamente', 'user': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
