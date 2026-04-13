@@ -7,18 +7,19 @@ import { ArrowRight, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 
+//Componente de la pagina de inicio para el carrusell y las actividades recientes.--RUBEN
 export default function Home() {
     const [recentActivities, setRecentActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const activitiesRef = useRef(null);
 
     useEffect(() => {
-        // Fetch recent activities from API
+        // Pone las ultimas 3 actividades en la pagina de inicio --RUBEN
         const fetchActivities = async () => {
             try {
                 const response = await axiosInstance.get('anuncios/');
-                // Take only the first 3 for the home page sections
-                setRecentActivities(response.data.slice(0, 3));
+                
+                setRecentActivities(response.data.slice(0, 3)); // Solo toma las primeras 3 actividades
             } catch (error) {
                 console.error("Error fetching activities:", error);
             } finally {
@@ -29,14 +30,15 @@ export default function Home() {
         fetchActivities();
     }, []);
 
+    //Función para hacer scroll suave a la sección de actividades --ESTEFANIA
     const scrollToActivities = () => {
         if (activitiesRef.current) {
-            // Scroll with a small offset for the navbar
             const y = activitiesRef.current.getBoundingClientRect().top + window.scrollY - 80;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
 
+    // Renderiza el carrusel y las actividades recientes en la pagina de inicio --ESTEFANIA
     return (
         <Layout>
             <Carousel onMoreClick={scrollToActivities} />

@@ -29,6 +29,9 @@ export default function Profile() {
     const [previewImage, setPreviewImage] = useState(null);
     const [saveLoading, setSaveLoading] = useState(false);
 
+
+    // Carga las inscripciones del usuario y, si es una organización, 
+    // también carga las actividades que ha creado y las pedanias para el formulario de creación/edición de actividades
     useEffect(() => {
         const fetchInscriptions = async () => {
             if (token) {
@@ -62,7 +65,7 @@ export default function Profile() {
     useEffect(() => {
         if (user) {
             setFormData({
-                first_name: user.first_name || '',
+                first_name: user.first_name || '', // Si el campo no existe, se asigna una cadena vacía para evitar errores de campos controlados
                 last_name: user.last_name || '',
                 email: user.email || '',
                 telefono: user.telefono || '',
@@ -73,10 +76,12 @@ export default function Profile() {
         }
     }, [user, isEditing]);
 
+    // Función para manejar los cambios en los campos del formulario de edición del perfil
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Función para manejar el cambio de imagen en el formulario de edición del perfil
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -85,17 +90,19 @@ export default function Profile() {
         }
     };
 
+    // Función para manejar el envío del formulario de edición del perfil 
     const handleSave = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); //prevenimos que el formulario recargue la página
         setSaveLoading(true);
 
         const data = new FormData();
-        Object.keys(formData).forEach(key => {
+        Object.keys(formData).forEach(key => { // Solo añadimos al FormData los campos que no sean null o undefined, para evitar sobreescribir datos con valores vacíos
             if (formData[key] !== null && formData[key] !== undefined) {
                 data.append(key, formData[key]);
             }
         });
 
+        // Si se ha seleccionado una nueva imagen, la añadimos al FormData. Si no, no incluimos el campo 'foto' para que el backend mantenga la imagen actual
         try {
             await axiosInstance.put('me/', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -110,15 +117,18 @@ export default function Profile() {
         }
     };
 
+    // Funciones para manejar el formulario de creación/edición de actividades (solo para organizaciones)
     const handleActivityInputChange = (e) => {
-        setActivityForm({ ...activityForm, [e.target.name]: e.target.value });
+        setActivityForm({ ...activityForm, [e.target.name]: e.target.value });// Actualiza el estado del formulario de actividad cada vez que se cambia un campo de texto, select o textarea
     };
 
+    //lo mismo pero para la imagen de la actividad (es un file UWU)
     const handleActivityImageChange = (e) => {
         const file = e.target.files[0];
         if (file) setActivityImage(file);
     };
 
+    // Abre el modal para crear una nueva actividad, reseteando el formulario y la imagen (el modal es el mismo para crear y editar, se diferencia si editingActivity es null o no) --ESTEFANIA
     const openCreateActivityModal = () => {
         setEditingActivity(null);
         setActivityForm({ titulo: '', descripcion: '', fecha_evento: '', etiqueta: 'otros', estado: 'borrador', cupo_maximo: 0, pedanias: pedanias[0]?.id || '' });

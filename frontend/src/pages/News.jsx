@@ -11,6 +11,7 @@ export default function News() {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Obtiene las actividades finalizadas o pasadas para mostrarlas como noticias en la página de noticias --ESTEFANIA
     useEffect(() => {
         const fetchNews = async () => {
             try {

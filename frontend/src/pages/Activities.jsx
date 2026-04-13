@@ -15,6 +15,7 @@ export default function Activities() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    //vincula las actividades con las pedanias para mostrar el nombre de la pedania en cada actividad --Estefania
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -38,6 +39,7 @@ export default function Activities() {
         fetchData();
     }, []);
 
+    // Filtra las actividades cada vez que cambia el término de búsqueda, la pedanía seleccionada o la lista de actividades --ESTEFANIA
     useEffect(() => {
         let results = activities;
 

@@ -24,6 +24,7 @@ export default function Register() {
         });
     };
 
+    // Función para manejar el envío del formulario de registro --ESTEFANIA
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -32,9 +33,9 @@ export default function Register() {
             if (result.success) {
                 navigate('/');
             } else {
-                // Handle dict of errors or string
+                // Si el error es un objeto (como suele ser en los errores de validación), toma el primer mensaje de error. Un objeto de error típico podría ser { "username": ["Este campo es obligatorio."] }
                 if (typeof result.error === 'object') {
-                    const firstMsg = Object.values(result.error).flat()[0];
+                    const firstMsg = Object.values(result.error).flat()[0]; //obtiene el primer mensaje de error
                     setError(firstMsg || 'Error en el registro');
                 } else {
                     setError(result.error || 'Error al registrarse.');
@@ -48,6 +49,7 @@ export default function Register() {
 
     return (
         <Layout>
+            {/* Contenedor principal con imagen de fondo de Mazarron, centrado y sin repeticion */}
             <div
                 className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat"
                 style={{
@@ -65,6 +67,7 @@ export default function Register() {
                     </div>
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-4">
+                            {/* Rejilla de dos columnas para nombre y apellidos en la misma fila */}
                             <div className="grid grid-cols-2 gap-4">
                                 <Input
                                     label="Nombre"

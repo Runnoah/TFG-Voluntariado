@@ -16,6 +16,7 @@ export default function ActivityDetail() {
     const [hasJoined, setHasJoined] = useState(false);
     const [joining, setJoining] = useState(false);
 
+    // Obtiene los detalles de la actividad al cargar el componente, y verifica si el usuario ya está inscrito --ESTEFANIA
     useEffect(() => {
         const fetchActivity = async () => {
             try {
@@ -40,6 +41,7 @@ export default function ActivityDetail() {
         fetchActivity();
     }, [id, token]);
 
+    // Función para manejar la inscripción del usuario a la actividad, verificando que esté logueado y actualizando el estado de la actividad --ESTEFANIA y RUBEN
     const handleJoin = async () => {
         if (!token) return navigate('/login');
         setJoining(true);
@@ -49,7 +51,7 @@ export default function ActivityDetail() {
                 estado: 'pendiente' // Default state
             });
             setHasJoined(true);
-            // Optionally refresh activity to show updated spaces if backend handles it
+            //reduce el número de plazas disponibles en la interfaz sin recargar
             setActivity(prev => ({ ...prev, plazas_restantes: prev.plazas_restantes - 1 }));
         } catch (error) {
             console.error("Error joining activity", error);

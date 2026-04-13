@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Pedania, Perfil, Anuncio, Inscripcion, Comentario
+from .models import Pedania, Perfil, Anuncio, Inscripcion, Comentario, Patrocinadores
 from django.contrib.auth.models import User
 
 # -----------------------------------------------------------------------------
@@ -78,3 +78,9 @@ class ComentarioSerializer(serializers.ModelSerializer):
         model = Comentario
         fields = ['id', 'anuncio', 'usuario', 'nombre_usuario', 'foto_usuario', 'contenido', 'fecha_comentario']
         read_only_fields = ['usuario', 'fecha_comentario']
+
+class PatrocinadoresSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Patrocinadores
+        fields = '__all__'

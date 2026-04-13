@@ -107,8 +107,11 @@ DATABASES = {
     }
 }
 
-db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
+# Solo aplica la configuracion de DATABASE_URL si esta definida (produccion/Render).
+# En desarrollo local se usa la base de datos SQLite configurada arriba.
+if os.environ.get('DATABASE_URL'):
+    db_from_env = dj_database_url.config(conn_max_age=500)
+    DATABASES['default'].update(db_from_env)
 
 
 # Password validation
@@ -161,3 +164,15 @@ STORAGES = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Configuracion del backend de email.
+# En desarrollo local usa la consola (imprime los emails en la terminal).
+# En produccion se debe configurar un servidor SMTP real mediante variables de entorno.
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@voluntariado.com')
+
+# Configuracion DEFAULT_AUTO_FIELD para evitar warnings de Django
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

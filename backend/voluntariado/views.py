@@ -1,10 +1,10 @@
 from rest_framework import viewsets, permissions
-from .models import Pedania, Anuncio, Inscripcion, Comentario, Perfil
-from .serializers import PedaniaSerializer, AnuncioSerializer, InscripcionSerializer, ComentarioSerializer, PerfilSerializer, UserSerializer
+from .models import Pedania, Anuncio, Inscripcion, Comentario, Perfil, Patrocinadores
+from .serializers import PedaniaSerializer, AnuncioSerializer, InscripcionSerializer, ComentarioSerializer, PerfilSerializer, UserSerializer, PatrocinadoresSerializer
 from .permissions import IsOrganizacionOrAdmin, IsOwnerOrAdmin
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from django.contrib.auth.models import User
 from .utils import send_welcome_email, send_inscription_email
 
@@ -150,3 +150,7 @@ class CrearOrganizacionView(APIView):
                 
             return Response({'mensaje': 'Organización creada exitosamente', 'user': serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PatrocinadorViewSet(viewsets.ModelViewSet):
+    queryset = Patrocinador.objects.filter(activo=True)
+    serializer_class = PatrocinadorSerializer

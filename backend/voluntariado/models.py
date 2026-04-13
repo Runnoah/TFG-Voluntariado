@@ -112,3 +112,14 @@ class Comentario(models.Model):
     def __str__(self):
         return f"Comentario de {self.usuario.username} en {self.anuncio.titulo}"
     
+class Patrocinadores(models.Model):
+
+    nombre = models.CharField(max_length=100, unique=True)
+    logo = models.ImageField(upload_to='patrocinadores/', blank=True, null=True)
+    sitio_web = models.URLField(blank=True, null=True, help_text="Link a la web del patrocinador")
+    anuncios = models.ManyToManyField('Anuncio', related_name='patrocinadores', blank=True)
+
+    class Meta:
+        verbose_name = "Patrocinador"
+        verbose_name_plural = "Patrocinadores"
+
