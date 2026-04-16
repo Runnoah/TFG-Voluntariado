@@ -22,7 +22,7 @@ def create_admin():
         user = User.objects.create_superuser(username=username, email=email, password=password)
         
     # Ensure profile exists
-    Perfil.objects.get_or_create(user=user, rol='organizacion', nombre_entidad='Ayuntamiento de Mazarrón')
+    Perfil.objects.get_or_create(user=user, rol='Administrador', nombre_entidad='Ayuntamiento de Mazarrón')
     
     print(f"Successfully configured user '{username}' with password '{password}'")
 

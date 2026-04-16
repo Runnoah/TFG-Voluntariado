@@ -152,5 +152,5 @@ class CrearOrganizacionView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PatrocinadorViewSet(viewsets.ModelViewSet):
-    queryset = Patrocinador.objects.filter(activo=True)
-    serializer_class = PatrocinadorSerializer
+    queryset = Patrocinadores.objects.all()
+    serializer_class = PatrocinadoresSerializer
