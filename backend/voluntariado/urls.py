@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PedaniaViewSet, PerfilViewSet, AnuncioViewSet, InscripcionViewSet, ComentarioViewSet, RegisterView, CurrentUserView, CrearOrganizacionView, PatrocinadorViewSet
+from .views import PedaniaViewSet, PerfilViewSet, AnuncioViewSet, InscripcionViewSet, ComentarioViewSet, RegisterView, CurrentUserView, CrearOrganizacionView, PatrocinadorViewSet, GlobalSearchView
 from rest_framework.authtoken.views import obtain_auth_token
 
 router = DefaultRouter()
@@ -17,4 +17,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('me/', CurrentUserView.as_view()),
     path('crear-organizacion/', CrearOrganizacionView.as_view(), name='crear_organizacion'),
+    path('search/', GlobalSearchView.as_view(), name='global_search'),
 ]

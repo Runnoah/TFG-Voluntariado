@@ -10,13 +10,27 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        extra_kwargs = {
+            'email': {'required': True, 'allow_blank': False}
+        }
+
+    def validate_email(self, value):
+        """
+        Verifica que el email sea único, ignorando el usuario actual si es una edición.
+        """
+        user = self.instance
+        if User.objects.filter(email=value).exclude(pk=user.pk if user else None).exists():
+            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
+        return value
 
 class PerfilSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    asistencias_count = serializers.ReadOnlyField(source='asistencias_confirmadas')
+    marco = serializers.ReadOnlyField()
     
     class Meta:
         model = Perfil
-        fields = ['id', 'user', 'rol', 'nombre_entidad', 'telefono', 'foto', 'fecha_nacimiento']
+        fields = ['id', 'user', 'rol', 'nombre_entidad', 'telefono', 'foto', 'fecha_nacimiento', 'asistencias_count', 'marco']
 
 # -----------------------------------------------------------------------------
 # UTILIDADES (Pedanías)
@@ -44,11 +58,11 @@ class AnuncioSerializer(serializers.ModelSerializer):
             'id', 'titulo', 'descripcion', 'imagen', 'fecha_publicacion', 
             'fecha_evento', 'etiqueta', 'estado', 'cupo_maximo', 
             'plazas_restantes', 'pedanias', 'nombre_pedania', 
-            'usuario', 'nombre_organizador'
+            'usuario', 'nombre_organizador', 'noticia_resumen', 'noticia_imagen', 'requerimientos'
         ]
         
         # R -> Esto de aqui no se piden en el formulario
-        read_only_fields = ['usuario', 'fecha_publicacion', 'estado']
+        read_only_fields = ['usuario', 'fecha_publicacion']
 
 # -----------------------------------------------------------------------------
 # INSCRIPCIONES Y COMENTARIOS

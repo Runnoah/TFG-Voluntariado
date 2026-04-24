@@ -23,6 +23,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/noticias" element={<News />} />
           <Route path="/perfil" element={<Profile />} />
+          <Route path="/perfil/:id" element={<Profile />} />
           <Route path="/crear-organizacion" element={<CrearOrganizacion />} />
         </Routes>
       </Router>

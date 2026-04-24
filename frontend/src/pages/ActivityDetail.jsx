@@ -2,31 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../layouts/Layout';
 import { Button } from '../components/ui/Button';
-import { Calendar, MapPin, Users, Clock, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowLeft, Share2, Sparkles, Newspaper } from 'lucide-react';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../context/AuthContext';
 
 export default function ActivityDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, token } = useAuth(); // Get user and token
+    const { user, token } = useAuth();
     const [activity, setActivity] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [hasJoined, setHasJoined] = useState(false);
     const [joining, setJoining] = useState(false);
 
-    // Obtiene los detalles de la actividad al cargar el componente, y verifica si el usuario ya está inscrito --ESTEFANIA
     useEffect(() => {
         const fetchActivity = async () => {
             try {
                 const response = await axiosInstance.get(`anuncios/${id}/`);
                 setActivity(response.data);
 
-                // Check if user is already inscribed
                 if (token) {
                     const inscripcionesParams = await axiosInstance.get('inscripciones/');
-                    // Filter locally because the endpoint returns all for the user
                     const isJoined = inscripcionesParams.data.some(insc => insc.anuncio === parseInt(id));
                     setHasJoined(isJoined);
                 }
@@ -41,17 +38,15 @@ export default function ActivityDetail() {
         fetchActivity();
     }, [id, token]);
 
-    // Función para manejar la inscripción del usuario a la actividad, verificando que esté logueado y actualizando el estado de la actividad --ESTEFANIA y RUBEN
     const handleJoin = async () => {
         if (!token) return navigate('/login');
         setJoining(true);
         try {
             await axiosInstance.post('inscripciones/', {
                 anuncio: id,
-                estado: 'pendiente' // Default state
+                estado: 'pendiente'
             });
             setHasJoined(true);
-            //reduce el número de plazas disponibles en la interfaz sin recargar
             setActivity(prev => ({ ...prev, plazas_restantes: prev.plazas_restantes - 1 }));
         } catch (error) {
             console.error("Error joining activity", error);
@@ -84,6 +79,8 @@ export default function ActivityDetail() {
         );
     }
 
+    const isFinished = activity.estado === 'finalizado';
+
     return (
         <Layout>
             <div className="min-h-screen bg-gray-50 pb-20">
@@ -106,9 +103,11 @@ export default function ActivityDetail() {
                                 <ArrowLeft className="mr-2 h-5 w-5" /> Volver
                             </Button>
                             <div className="flex items-center space-x-4 mb-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-semibold 
-                                    ${activity.estado === 'publicado' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'}`}>
-                                    {activity.estado === 'publicado' ? 'Abierto' : 'Finalizado'}
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${
+                                    isFinished 
+                                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' 
+                                    : 'bg-green-500/20 text-green-300 border-green-500/30'}`}>
+                                    {isFinished ? 'Finalizado' : 'Abierto'}
                                 </span>
                                 <span className="text-gray-300 text-sm flex items-center">
                                     <MapPin className="h-4 w-4 mr-1" /> {activity.nombre_pedania}
@@ -126,27 +125,58 @@ export default function ActivityDetail() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Main Info */}
                         <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-white rounded-2xl p-8 shadow-xl">
+                            <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Sobre esta actividad</h2>
                                 <p className="text-lg text-gray-700 leading-relaxed whitespace-pre-line">
                                     {activity.descripcion}
                                 </p>
                             </div>
 
-                            {/* Additional Details (Example) */}
-                            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">¿Qué necesitas saber?</h3>
-                                <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                    <li>Lleva ropa cómoda y adecuada para el clima.</li>
-                                    <li>Llega 15 minutos antes de la hora de inicio.</li>
-                                    <li>¡Trae mucha energía y ganas de ayudar!</li>
-                                </ul>
-                            </div>
+                            {/* SECCIÓN DE NOTICIA / RESULTADOS (Solo si existen) */}
+                            {activity.noticia_resumen && (
+                                <div className="bg-gradient-to-br from-blue-50 to-white rounded-3xl p-8 shadow-xl border border-blue-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="bg-blue-600 p-2 rounded-xl text-white">
+                                            <Newspaper className="h-6 w-6" />
+                                        </div>
+                                        <h2 className="text-2xl font-black text-blue-900">Resultados e Impacto</h2>
+                                        <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
+                                    </div>
+                                    
+                                    <div className="prose prose-blue max-w-none">
+                                        <p className="text-xl text-blue-800 font-medium leading-relaxed italic">
+                                            "{activity.noticia_resumen}"
+                                        </p>
+                                    </div>
+
+                                    {activity.noticia_imagen && (
+                                        <div className="mt-8 rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                                            <img 
+                                                src={activity.noticia_imagen} 
+                                                alt="Resultado de la actividad" 
+                                                className="w-full h-auto object-cover max-h-[400px]"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Requerimientos Dinámicos */}
+                            {activity.requerimientos && (
+                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-4">Cosas que necesitas</h3>
+                                    <ul className="list-disc list-inside space-y-2 text-gray-700">
+                                        {activity.requerimientos.split('\n').filter(line => line.trim() !== '').map((line, index) => (
+                                            <li key={index}>{line}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
                         <div className="space-y-6">
-                            <div className="bg-white rounded-2xl p-6 shadow-xl border border-gray-100 sticky top-24">
+                            <div className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 sticky top-24">
                                 <h3 className="text-lg font-bold text-gray-900 mb-6">Detalles del Evento</h3>
 
                                 <div className="space-y-6">
@@ -174,23 +204,30 @@ export default function ActivityDetail() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-start">
-                                        <div className="bg-brand-50 p-2 rounded-lg mr-4">
-                                            <Users className="h-6 w-6 text-brand-600" />
+                                    {!isFinished && (
+                                        <div className="flex items-start">
+                                            <div className="bg-brand-50 p-2 rounded-lg mr-4">
+                                                <Users className="h-6 w-6 text-brand-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Plazas</p>
+                                                <p className="text-gray-900 font-semibold text-lg">
+                                                    {activity.plazas_restantes} disponibles
+                                                    <span className="text-sm text-gray-400 font-normal ml-1">
+                                                        / {activity.cupo_maximo}
+                                                    </span>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 font-medium">Plazas</p>
-                                            <p className="text-gray-900 font-semibold text-lg">
-                                                {activity.plazas_restantes} disponibles
-                                                <span className="text-sm text-gray-400 font-normal ml-1">
-                                                    / {activity.cupo_maximo}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
 
                                     <div className="pt-6 border-t border-gray-100">
-                                        {user ? (
+                                        {isFinished ? (
+                                            <div className="bg-blue-50 p-4 rounded-2xl text-center border border-blue-100">
+                                                <p className="text-blue-700 font-bold mb-1">¡Evento Completado!</p>
+                                                <p className="text-blue-500 text-xs">Ya no admite más inscripciones.</p>
+                                            </div>
+                                        ) : user ? (
                                             hasJoined ? (
                                                 <Button className="w-full py-6 text-lg bg-green-600 hover:bg-green-700 text-white cursor-default">
                                                     ¡Ya estás inscrito!

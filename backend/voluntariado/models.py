@@ -27,6 +27,26 @@ class Perfil(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.rol}"
     
+    @property
+    def asistencias_confirmadas(self):
+        """Retorna el número de inscripciones donde el usuario ha asistido."""
+        return self.user.inscripciones_realizadas.filter(asistido=True).count()
+
+    @property
+    def marco(self):
+        """Retorna el tipo de marco basado en el rol y asistencias."""
+        if self.rol == 'organizacion':
+            return 'organizacion'
+        
+        count = self.asistencias_confirmadas
+        if count >= 16:
+            return 'oro'
+        elif count >= 5:
+            return 'plata'
+        elif count >= 1:
+            return 'bronce'
+        return 'ninguno'
+    
 
 class Pedania(models.Model):
 
@@ -70,6 +90,13 @@ class Anuncio(models.Model):
 
     cupo_maximo = models.PositiveBigIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Campos para la "Noticia" una vez finalizada
+    noticia_resumen = models.TextField(blank=True, null=True, help_text="Resumen de lo logrado en la actividad")
+    noticia_imagen = models.ImageField(upload_to='noticias/', blank=True, null=True, help_text="Imagen opcional para la noticia")
+
+    requerimientos = models.TextField(blank=True, null=True, help_text="Requisitos para participar (ej: traer agua, guantes, mayor de edad...)")
+
     #Creador + Lugar donde se hace
     pedanias = models.ForeignKey(Pedania, on_delete=models.CASCADE, related_name='anuncios')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anuncios_creados')

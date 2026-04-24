@@ -63,11 +63,8 @@ class PerfilViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated] # Solo usuarios registrados ven perfiles
 
     def get_queryset(self):
-        # Opcional: Que cada uno vea solo su perfil, o admin vea todos
-        user = self.request.user
-        if user.is_staff:
-            return Perfil.objects.all()
-        return Perfil.objects.filter(user=user)
+        # Permitimos ver todos los perfiles si estás autenticado
+        return Perfil.objects.all()
 
 from rest_framework.authtoken.models import Token
 
@@ -103,11 +100,11 @@ class CurrentUserView(APIView):
         user = request.user
         data = request.data
 
-        # 1. Actualizar datos del Usuario
-        if 'first_name' in data: user.first_name = data['first_name']
-        if 'last_name' in data: user.last_name = data['last_name']
-        if 'email' in data: user.email = data['email']
-        user.save()
+        # 1. Actualizar datos del Usuario (Validación de email único incluida en UserSerializer)
+        user_serializer = UserSerializer(user, data=data, partial=True)
+        if not user_serializer.is_valid():
+            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_serializer.save()
 
         # 2. Actualizar datos del Perfil
         # Usamos el serializer para validar y guardar (partial=True permite enviar solo algunos campos)
@@ -154,3 +151,58 @@ class CrearOrganizacionView(APIView):
 class PatrocinadorViewSet(viewsets.ModelViewSet):
     queryset = Patrocinadores.objects.all()
     serializer_class = PatrocinadoresSerializer
+
+class GlobalSearchView(APIView):
+    """
+    Endpoint para buscar en múltiples modelos: Anuncios (actividades y noticias) y Perfiles.
+    """
+    def get(self, request):
+        query = request.query_params.get('q', '')
+        if not query or len(query) < 2:
+            return Response({'results': []})
+
+        results = []
+
+        # 1. Buscar en Anuncios (Actividades y Noticias)
+        from django.utils import timezone
+        from django.db.models import Q
+        
+        anuncios = Anuncio.objects.filter(
+            Q(titulo__icontains=query) | 
+            Q(descripcion__icontains=query) |
+            Q(etiqueta__icontains=query) |
+            Q(pedanias__nombre__icontains=query)
+        ).filter(estado__in=['publicado', 'finalizado'])[:5]
+
+        for a in anuncios:
+            is_news = a.estado == 'finalizado' or a.fecha_evento < timezone.now()
+            
+            results.append({
+                'id': a.id,
+                'type': 'noticia' if is_news else 'actividad',
+                'title': a.titulo,
+                'subtitle': f"{a.pedanias.nombre} • {a.fecha_evento.strftime('%d/%m/%Y')}",
+                'image': a.imagen.url if a.imagen else None,
+                'url': f"/actividades/{a.id}"
+            })
+
+        # 2. Buscar en Perfiles (Organizaciones y Voluntarios)
+        perfiles = Perfil.objects.filter(
+            Q(nombre_entidad__icontains=query) | 
+            Q(user__username__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(rol__icontains=query)
+        )[:5]
+
+        for p in perfiles:
+            results.append({
+                'id': p.id,
+                'type': 'organizacion' if p.rol == 'organizacion' else 'voluntario',
+                'title': p.nombre_entidad if p.rol == 'organizacion' else f"{p.user.first_name} {p.user.last_name}".strip() or p.user.username,
+                'subtitle': p.rol.capitalize(),
+                'image': p.foto.url if p.foto else None,
+                'url': "/perfil" if p.user == request.user else f"/perfil/{p.id}"
+            })
+
+        return Response({'results': results})

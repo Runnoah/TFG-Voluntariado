@@ -58,14 +58,14 @@ export default function News() {
                                 <Card key={item.id} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-0 bg-white">
                                     <div className="h-56 overflow-hidden relative group">
                                         <img
-                                            src={item.imagen || "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                                            src={item.noticia_imagen || item.imagen || "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                                             alt={item.titulo}
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">
                                             <span className="bg-brand-500/90 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                                                Finalizado
+                                                Noticia
                                             </span>
                                         </div>
                                     </div>
@@ -78,7 +78,7 @@ export default function News() {
                                             {item.titulo}
                                         </h3>
                                         <p className="text-gray-600 mb-6 line-clamp-3 text-base">
-                                            {item.descripcion}
+                                            {item.noticia_resumen || item.descripcion}
                                         </p>
                                         <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
                                             <span className="text-sm font-medium text-brand-600 flex items-center">
