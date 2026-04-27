@@ -69,14 +69,28 @@ class PerfilViewSet(viewsets.ModelViewSet):
 from rest_framework.authtoken.models import Token
 
 class RegisterView(APIView):
+    # Corrección: Evitamos el error de "token CSRF missing" que ocurría esporádicamente
+    # (cada cierto tiempo) cuando el navegador del usuario tenía una cookie de sesión guardada
+    # (por ejemplo, por haber entrado al panel de administrador). 
+    # Al estar SessionAuthentication activa por defecto, exigía CSRF. Al limpiar las clases de
+    # autenticación para esta vista pública, solucionamos el problema permanentemente.
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
+            password = request.data.get('password')
+            if not password:
+                return Response({'password': ['Este campo es obligatorio.']}, status=status.HTTP_400_BAD_REQUEST)
+                
             user = serializer.save()
-            user.set_password(request.data['password'])
+            user.set_password(password)
             user.save()
-            # Crear perfil automáticamente
-            Perfil.objects.create(user=user, rol='Voluntario') 
+            
+            # Crear perfil automáticamente usando el valor correcto del choice ('voluntario')
+            Perfil.objects.create(user=user, rol='voluntario') 
+            
             # Generar token real
             token, created = Token.objects.get_or_create(user=user)
             
